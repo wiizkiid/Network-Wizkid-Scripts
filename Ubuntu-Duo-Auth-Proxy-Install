@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Check if the script is running as root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root."
+    exit 1
+fi
+
+# Install required packages
+apt-get update
+apt-get install -y build-essential libffi-dev perl zlib1g-dev
+
+# Download the latest Duo Authentication Proxy
+wget --content-disposition https://dl.duosecurity.com/duoauthproxy-latest-src.tgz
+
+# Extract the proxy files
+tar xzf duoauthproxy-*.tgz
+
+# Find the extracted directory and change to it
+duoauthproxy_dir=$(find . -type d -name "duoauthproxy-*" -print -quit)
+if [ -z "$duoauthproxy_dir" ]; then
+    echo "Failed to find the Duo Authentication Proxy directory."
+    exit 1
+fi
+
+cd "$duoauthproxy_dir"
+
+# Build and install the authentication proxy
+make
+cd duoauthproxy-build
+./install
+
+# Clean up downloaded files (optional)
+rm -f ../duoauthproxy-*.tgz
+
+echo "Duo Authentication Proxy installation completed."
+
+cd /opt/duoauthproxy
